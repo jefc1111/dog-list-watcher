@@ -7,6 +7,7 @@ const nodemailer = require("nodemailer");
 const { dogSites } = require('./site-list.private.js');
 
 const DOG_LIST_DIR = process.env.DOG_LIST_DIR;
+const EMAIL_SERVICE = process.env.EMAIL_SERVICE;
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 const EMAIL_RECIPIENT = process.env.EMAIL_RECIPIENT;
