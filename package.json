@@ -1,0 +1,18 @@
+{
+  "name": "source-scraper-puppeteer-script",
+  "version": "1.0.0",
+  "description": "Puppeteer script for scraping source data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "scrape-sites": "node -e 'require(\"./index\").scrapeSites(true)'"
+  },
+  "author": "@jefc1111",
+  "license": "ISC",
+  "dependencies": {
+    "@sparticuz/chromium": "122.0.0",
+    "dotenv": "^17.2.1",
+    "nodemailer": "^7.0.5",
+    "puppeteer-core": "22.5.0"
+  }
+}

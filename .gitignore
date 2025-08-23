@@ -1,0 +1,7 @@
+node_modules
+.serverless
+.env
+log.txt
+serverless.yml
+site-list.private.js
+dog_lists
