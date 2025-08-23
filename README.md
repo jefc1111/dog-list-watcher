@@ -12,4 +12,4 @@ Also you would want to run it periodically. Each time it runs it compares to the
 
 ## Example cron cmd to run hourly
 
-`0 * * * * /home/username/.nvm/versions/node/v20.14.0/bin/node /home/username/dog-list-watcher/scrape-sites.js >> /home/jefc/dev/dog-list-watcher/log.txt 2>&1`
+`0 * * * * /home/username/.nvm/versions/node/v20.14.0/bin/node /home/username/dog-list-watcher/scrape-sites.js >> /home/username/dev/dog-list-watcher/log.txt 2>&1`
