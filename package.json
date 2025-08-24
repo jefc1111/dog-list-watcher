@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "scrape-sites": "node -e 'require(\"./index\").scrapeSites(true)'"
+    "scrape-sites": "export IS_LOCAL=true && node -e 'require(\"./index\").scrapeSites(null, null, true)'"
   },
   "author": "@jefc1111",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.873.0",
     "@sparticuz/chromium": "122.0.0",
     "dotenv": "^17.2.1",
     "nodemailer": "^7.0.5",

@@ -1,0 +1,12 @@
+service: dog-list-watcher
+
+provider:
+  name: aws
+  region: eu-west-1
+  runtime: nodejs20.x
+  memorySize: 1024
+
+functions:
+  check-all:
+    handler: index.scrapeSites
+    timeout: 120

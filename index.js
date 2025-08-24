@@ -5,9 +5,12 @@ const chromium = require("@sparticuz/chromium")
 const puppeteer = require("puppeteer-core")
 const fs = require("fs").promises;
 const nodemailer = require("nodemailer");
+const { S3Client, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+
 const { dogSites } = require('./site-list.private.js');
 
 const DOG_LIST_DIR = process.env.DOG_LIST_DIR;
+
 const EMAIL_SERVICE = process.env.EMAIL_SERVICE;
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
@@ -20,6 +23,10 @@ const transporter = nodemailer.createTransport({
     pass: EMAIL_PASS,
   },
 });
+
+// --- S3 Configuration ---
+const S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
+const s3Client = new S3Client({ region: process.env.AWS_S3_REGION });
 
 const setup = async (isLocal) => {
   const browser = await puppeteer.launch({
@@ -40,6 +47,8 @@ const setup = async (isLocal) => {
 
 // --- Local File Configuration ---
 const getFilePath = (siteId) => `${DOG_LIST_DIR}/last_seen_dogs_${siteId}.json`;
+
+const getS3FileKey = (siteId) => `last_seen_dogs_${siteId}.json`;
 
 const sendChangeNotification = async (changes, dogSite) => {
   const hasChanges = Object.values(changes).some(category => category.length > 0);
@@ -119,6 +128,33 @@ const saveCurrentDogs = async (dogs, dogSite) => {
     console.error('Error saving file:', error);
     throw error;
   }
+}
+
+async function readLastSeenDogsFromS3(dogSite) {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: getS3FileKey(dogSite.id),
+    });
+    const { Body } = await s3Client.send(command);
+    const data = await Body.transformToString();
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.name === 'NoSuchKey') {
+      return []; // Handle the first run where the file doesn't exist
+    }
+    throw error;
+  }
+}
+
+async function saveCurrentDogsToS3(dogs, dogSite) {
+  const command = new PutObjectCommand({
+    Bucket: S3_BUCKET_NAME,
+    Key: getS3FileKey(dogSite.id),
+    Body: JSON.stringify(dogs, null, 2),
+    ContentType: 'application/json',
+  });
+  await s3Client.send(command);
 }
 
 const doChangeDetection = async (previousDogs, currentDogs, dogSite) => {
@@ -203,18 +239,25 @@ const doChangeDetection = async (previousDogs, currentDogs, dogSite) => {
 
 /* -------------------------------------------------------------------------------------------- */
 
-const scrapeSites = async (isLocal = false) => {
+const scrapeSites = async (event) => {
+  const isLocal = process.env.IS_LOCAL;
+  const isLambda = !! event;
+
   for (const dogSite of dogSites) {
     const [ browser, page ] = await setup(isLocal);
 
     try {
-      const lastSeenDogs = await readLastSeenDogs(dogSite);
+      const lastSeenDogs = isLambda 
+      ? await readLastSeenDogsFromS3(dogSite) 
+      : await readLastSeenDogs(dogSite);
 
       const currentDogs = await getCurrentDogs(page, dogSite);
 
       const changes = await doChangeDetection(lastSeenDogs, currentDogs, dogSite);
 
-      await saveCurrentDogs(currentDogs, dogSite);
+      const _ = isLambda 
+      ? await saveCurrentDogsToS3(currentDogs, dogSite) 
+      : await saveCurrentDogs(currentDogs, dogSite);
 
       await sendChangeNotification(changes, dogSite);
     } catch (error) {

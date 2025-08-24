@@ -13,3 +13,12 @@ Also you would want to run it periodically. Each time it runs it compares to the
 ## Example cron cmd to run hourly
 
 `0 * * * * cd /home/user/dog-list-watcher/ && /home/user/.nvm/versions/node/v20.14.0/bin/node scrape-sites.js >> /home/user/dog-list-watcher/log.txt 2>&1`
+
+## Running in AWS
+
+`sls deploy --aws-profile your-aws-profile`
+
+- Create S3 bucket
+- Set config vars
+- Configure IAM Role
+
